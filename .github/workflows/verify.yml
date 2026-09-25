@@ -57,6 +57,7 @@ jobs:
           npm run migration:rehearse -- --snapshot tools/migration/fixtures/inventory-source.json --policy tools/migration/fixtures/inventory-policy.json --kind synthetic --out migration-runs/ci
           result=$?
           test "$result" -eq 2
+          node tools/migration/verify-rehearsal.mjs migration-runs/ci/migration-report.json
       - name: Preserve safe synthetic reports
         if: always()
         uses: actions/upload-artifact@v4
