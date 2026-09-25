@@ -14,8 +14,12 @@ export function preflight(source,installation,data,policy) {
  if(!policy||!/^[A-Z]{3}$/.test(policy.currency??''))review('CURRENCY_REQUIRED');
  if(policy?.finishedStockUnit!=='count')review('FINISHED_STOCK_UNIT_MUST_BE_EXPLICIT_COUNT');
  if(policy?.historyPolicy!=='opening-balance-only')review('LEGACY_STOCK_HISTORY_REVIEW_REQUIRED');
+ if(policy?.sourceTimezone){
+  try{new Intl.DateTimeFormat('en',{timeZone:policy.sourceTimezone}).format(new Date(0));}
+  catch{review('INVALID_SOURCE_TIMEZONE');}
+ }
  const inspect=(v)=>{
-  if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(v))review('NAIVE_TIMESTAMP_REQUIRES_EXPLICIT_OFFSET_AND_SOURCE_TIMEZONE');
+  if(typeof v==='string'&&/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?$/.test(v))review('NAIVE_TIMESTAMP_REQUIRES_EXPLICIT_OFFSET_AND_SOURCE_TIMEZONE');
   else if(v&&typeof v==='object')Object.values(v).forEach(inspect);
  };inspect(data);
  let bundle;

@@ -29,6 +29,9 @@ try{
  commit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),
  dirty:!!execFileSync('git',['status','--porcelain'],{cwd:root,encoding:'utf8'}).trim()});
  report.mappingPolicy={currency:policy.currency,finishedStockUnit:policy.finishedStockUnit,materialUnits:policy.materialUnits,historyPolicy:policy.historyPolicy,sourceTimezone:policy.sourceTimezone};
+ report.mappingPolicy.timestampInterpretation='Explicit source offsets only; naive values require reviewed normalization';
+ await writeFile(resolve(output,'source-snapshot.json'),bytes,{flag:'wx',mode:0o600});
+ if(fingerprint(await readFile(resolve(output,'source-snapshot.json')))!==report.snapshot.sha256)throw new Error('Source copy integrity mismatch');
  const prepared=preflight(source,installation,data,policy);
  report.discrepancies=prepared.issues;report.warnings=prepared.warnings;
  report.manualReviews.push({id:'runtime-lifecycle',status:'REQUIRES_REVIEW',evidence:'Quarkus 3.8.4 is unsupported; see QUARKUS-LIFECYCLE.md'});
@@ -54,7 +57,8 @@ try{
  },volumes:{'source-db':{},'restore-db':{}}};
  await writeFile(compose,JSON.stringify(spec,null,2),{flag:'wx',mode:0o600});
  stage='isolated_target';started=true;dc(['up','--build','--detach']);
- const port=dc(['port','web','80']).trim().split(':').pop(),base='http://127.0.0.1:'+port;
+ const currentBase=()=> 'http://127.0.0.1:'+dc(['port','web','80']).trim().split(':').pop();
+ let base=currentBase();
  let token;
  async function login(){
   for(let i=0;i<90;i++){
@@ -100,11 +104,11 @@ try{
  report.restore={status:'NOT_RUN',backupSha256:fingerprint(Buffer.from(sql)),scope:'Disposable target DB; includes test user hashes, keep private'};
  substage='restore-sql';dc(['exec','-T','restore','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot rehearsal'],sql);
  substage='restored-backend-start';env.INVENTORY_DB_URL='jdbc:mysql://restore:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);
- substage='restored-backend-login';await login();
+ base=currentBase();substage='restored-backend-login';await login();
  substage='restored-state-comparison';
  if(JSON.stringify(await snapshot())!==JSON.stringify(before))throw new Error('Restored state mismatch');
  report.restore.status='PASS';setGate(report,'backup_restore','PASS',['mysqldump restored into separate empty MySQL; API comparison passed']);
- stage='rollback';env.INVENTORY_DB_URL='jdbc:mysql://db:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);await login();
+ stage='rollback';env.INVENTORY_DB_URL='jdbc:mysql://db:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);base=currentBase();await login();
  if(JSON.stringify(await snapshot())!==JSON.stringify(before))throw new Error('Rollback state mismatch');
  report.rollback={status:'REQUIRES_REVIEW',routingRestoration:'PASS',applicationVersion:report.target.commit,reason:'Same-version disposable rollback passed; actual legacy version and post-cutover writes require review'};
  setGate(report,'rollback','REQUIRES_REVIEW',['Same-version rollback verified; previous production version unavailable']);
