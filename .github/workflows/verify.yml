@@ -1,0 +1,47 @@
+name: Verify consolidated inventory
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: inventory_test
+          MYSQL_USER: inventory
+          MYSQL_PASSWORD: isolated-ci-password
+          MYSQL_ROOT_PASSWORD: isolated-ci-root-password
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: node --test tools/normalize-import.test.mjs
+      - run: npm ci --ignore-scripts
+        working-directory: apps/web
+      - run: npm run test:run && npm run typecheck && npm run build
+        working-directory: apps/web
+      - run: mvn -B test
+        working-directory: apps/api
+      - name: Verify MySQL migrations and HTTP contracts
+        working-directory: apps/api
+        run: >-
+          mvn -B test -Dquarkus.datasource.db-kind=mysql
+          -Dquarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/inventory_test
+          -Dquarkus.datasource.username=inventory
+          -Dquarkus.datasource.password=isolated-ci-password
+      - run: docker build -t inventory-api-check ./apps/api
+      - run: docker build -t inventory-web-check ./apps/web

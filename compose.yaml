@@ -1,0 +1,36 @@
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: inventory_consolidated
+      MYSQL_USER: inventory
+      MYSQL_PASSWORD: ${INVENTORY_DB_PASSWORD:?Set INVENTORY_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD}
+    volumes:
+      - inventory-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  backend:
+    build: ./apps/api
+    environment:
+      INVENTORY_DB_URL: jdbc:mysql://db:3306/inventory_consolidated
+      INVENTORY_DB_USER: inventory
+      INVENTORY_DB_PASSWORD: ${INVENTORY_DB_PASSWORD:?Set INVENTORY_DB_PASSWORD}
+      INVENTORY_AUTH_SECRET: ${INVENTORY_AUTH_SECRET:?Set INVENTORY_AUTH_SECRET}
+      INVENTORY_BOOTSTRAP_ADMIN: ${INVENTORY_BOOTSTRAP_ADMIN:-false}
+      INVENTORY_AUTH_USER: ${INVENTORY_AUTH_USER:-}
+      INVENTORY_AUTH_PASSWORD: ${INVENTORY_AUTH_PASSWORD:-}
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build: ./apps/web
+    ports:
+      - "127.0.0.1:8088:80"
+    depends_on:
+      - backend
+volumes:
+  inventory-db:
