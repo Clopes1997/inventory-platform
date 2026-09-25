@@ -38,6 +38,7 @@ export function preflight(source,installation,data,policy) {
   entries.set(key(e),e);
   if(e.code){const k=e.type+':'+e.code;if(codes.has(k))issues.push({code:'DUPLICATE_CODE',record:key(e),status:'REQUIRES_REVIEW'});codes.add(k);}
   if(e.type==='material'&&!policy?.materialUnits?.[e.legacyId])review('MATERIAL_UNIT_REQUIRED:'+e.legacyId);
+  if(e.type==='material'&&e.deletedAt&&decimal(e.quantity,4)!==0n)issues.push({code:'ARCHIVED_MATERIAL_WITH_STOCK',record:key(e),status:'REQUIRES_REVIEW'});
   if(e.type==='product'&&e.deletedAt&&e.stock!==0)issues.push({code:'ARCHIVED_PRODUCT_WITH_STOCK',record:key(e),status:'REQUIRES_REVIEW'});
  }
  for(const e of bundle.entries){

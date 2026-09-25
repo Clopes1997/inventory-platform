@@ -22,3 +22,14 @@ test('naive timestamps and archived stock require explicit review',()=>{
  data.produtos[0].deleted_at='2026-11-01T01:30:00-03:00';
  assert.ok(preflight('product-manager','fixture',data,policy).issues.some(i=>i.code==='ARCHIVED_PRODUCT_WITH_STOCK'));
 });
+test('active BOM references to archived materials require review and unit mapping',()=>{
+ const data={schemaVersion:1,source:'autoflex',installation:'fixture',entries:[
+  {type:'product',legacyId:'p',name:'P',price:'1.00',stock:0,available:true},
+  {type:'material',legacyId:'m',name:'M',quantity:'1.0000',deletedAt:'2024-01-01T00:00:00Z'},
+  {type:'recipe',legacyId:'r',product:'p',material:'m',quantity:'0.0001'},
+ ]};
+ const r=preflight('autoflex','fixture',data,policy);
+ assert.ok(r.issues.some(i=>i.code==='ACTIVE_REFERENCE_TO_ARCHIVED'));
+ assert.ok(r.issues.some(i=>i.code==='ARCHIVED_MATERIAL_WITH_STOCK'));
+ assert.ok(r.issues.some(i=>i.code==='MATERIAL_UNIT_REQUIRED:m'));
+});
