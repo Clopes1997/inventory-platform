@@ -36,6 +36,11 @@ class ImportHttpTest {
         given().auth().oauth2(token).contentType(ContentType.JSON).body(bundle).post("/api/imports/apply")
                 .then().statusCode(200).body("alreadyImported", is(3)).body("newRecords", is(0));
         assertThat(count("select count(*) from stock_adjustment where reason like 'Imported opening%'")).isEqualTo(1);
+        given().auth().oauth2(token).queryParam("source","product-manager").queryParam("installation","fixture-a")
+                .get("/api/imports/snapshot").then().statusCode(200)
+                .body("entries",hasSize(3)).body("entries.find { it.type == 'product' }.price",is("12.34"))
+                .body("entries.find { it.type == 'product' }.stock",is("3"))
+                .body("entries.find { it.type == 'product' }.brand",is("99"));
         given().auth().oauth2(token).queryParam("name", "Import product").queryParam("minPrice", "12.00").queryParam("available", true)
                 .get("/api/catalog/products").then().statusCode(200).body("content", hasSize(1)).body("content[0].finishedStock", is(3));
         given().auth().oauth2(token).queryParam("name", "Import product").queryParam("maxPrice", "12.50")

@@ -23,6 +23,40 @@ Reports record source identity/hash, target commit/dirty state, timestamp, count
 
 ## Operator boundaries
 
+## Inventory disposable rehearsal
+
+Docker Engine with Compose, Node 22 and the installed frontend dependencies/Cypress binary are required.
+The runner creates uniquely named disposable MySQL volumes, builds the production images, imports
+the fixture twice, compares observed target fields and exact stock values, runs browser acceptance,
+restarts the backend, restores a SQL backup into a second empty MySQL service and switches back.
+Only the runner's generated Compose project is removed. Source files are read and fingerprinted only.
+
+~~~powershell
+npm run web:install
+npm --prefix apps/web exec -- cypress install
+npm run migration:test
+npm run migration:rehearse -- --snapshot tools/migration/fixtures/inventory-source.json --policy tools/migration/fixtures/inventory-policy.json --kind synthetic --out migration-runs/rehearsal-001
+~~~
+
+Exit 2 is expected for synthetic evidence with unresolved real-source/cutover gates. Exit 1 is
+a failed execution. Reports are generated in the chosen output directory; the SQL backup stays
+there too and contains test user hashes. Keep real-data runs private. CI uploads JSON/Markdown only.
+
+Legacy raw exports additionally require --application and --installation. Policies explicitly name
+currency, finishedStockUnit=count, materialUnits by legacy ID, and historyPolicy=opening-balance-only.
+The fixture's BRL/kg policies apply only to synthetic records, never to unidentified real data.
+No unit conversion or currency conversion occurs. Naive timestamps stop preflight; obtain the source
+timezone and explicit per-record offset before creating a reviewed normalized copy. Keep the original
+and mapping evidence together. Historical movements are not manufactured from opening balances.
+
+The authenticated administrator GET /api/imports/snapshot exports current imported entities with stable
+legacy/target IDs and exact decimal strings. It reads entity tables, not the stored source JSON.
+Unexpected/missing mappings, reference differences, archive changes and stock totals fail reconciliation.
+Full legacy application-version rollback remains a review gate: the automated rehearsal verifies
+same-version disposable database rollback, not unknown production-version compatibility.
+
+See QUARKUS-LIFECYCLE.md: the unsupported runtime is explicit pre-cutover technical debt.
+
 Read source copies only. Use a separate disposable target and unique database name/credentials. Never run a new lineage against a legacy database. Hash snapshots before/after. Reconcile exclusions explicitly. Backup creation is not proof: restore into a second empty target and compare counts, exact totals, references and acceptance behavior.
 
 Rollback freezes writes and restores the compatible database and application version before reopening access. Do not run old code against a new schema. Post-cutover writes require explicit reconciliation; rollback may require downtime and must not silently discard them. Personal rollback uses browser backup restore and revision/stale-tab checks.

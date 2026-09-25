@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "source": "autoflex",
+  "installation": "synthetic",
+  "entries": [
+    {
+      "type": "brand",
+      "legacyId": "b1",
+      "name": "Synthetic brand",
+      "manufacturer": "Synthetic manufacturer"
+    },
+    {
+      "type": "city",
+      "legacyId": "c1",
+      "name": "Synthetic city"
+    },
+    {
+      "type": "product",
+      "legacyId": "p1",
+      "code": "MIGRATION-P1",
+      "name": "Synthetic product",
+      "description": "Fixture only",
+      "categoryPath": "synthetic/parts",
+      "price": "12.34",
+      "stock": 3,
+      "available": true,
+      "brand": "b1",
+      "city": "c1"
+    },
+    {
+      "type": "material",
+      "legacyId": "m1",
+      "code": "MIGRATION-M1",
+      "name": "Synthetic material",
+      "quantity": "10.1250"
+    },
+    {
+      "type": "recipe",
+      "legacyId": "r1",
+      "product": "p1",
+      "material": "m1",
+      "quantity": "0.2500"
+    },
+    {
+      "type": "product",
+      "legacyId": "archived",
+      "code": "MIGRATION-ARCHIVED",
+      "name": "Synthetic archived product",
+      "price": "0.29",
+      "stock": 0,
+      "available": false,
+      "deletedAt": "2024-01-01T00:00:00-03:00"
+    }
+  ]
+}

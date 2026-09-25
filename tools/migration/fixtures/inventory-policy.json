@@ -1,0 +1,9 @@
+{
+  "currency": "BRL",
+  "finishedStockUnit": "count",
+  "historyPolicy": "opening-balance-only",
+  "materialUnits": {
+    "m1": "kg"
+  },
+  "sourceTimezone": "America/Sao_Paulo"
+}

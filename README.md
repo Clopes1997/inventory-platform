@@ -1,5 +1,8 @@
 # Inventory platform — Autoflex foundation
 
+Migration/cutover operators: read [Retirement Readiness](RETIREMENT.md) and the
+[Quarkus lifecycle review](QUARKUS-LIFECYCLE.md). Automated validation never authorizes source archival.
+
 Autoflex manages a product catalog, brands/manufacturers, geographic city metadata,
 finished stock, raw materials and bills of materials. It calculates independent
 per-product production feasibility and supports reviewed imports from Arquivel,
