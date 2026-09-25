@@ -47,7 +47,7 @@ try{
  INVENTORY_DB_URL:'jdbc:mysql://db:3306/rehearsal'};
  compose=resolve(output,'disposable-compose.json');
  const db={image:'mysql:8.4',environment:['MYSQL_DATABASE=rehearsal','MYSQL_USER=rehearsal','MYSQL_PASSWORD','MYSQL_ROOT_PASSWORD'],
- healthcheck:{test:['CMD','mysqladmin','ping','-h','localhost'],interval:'3s',timeout:'5s',retries:60}};
+ healthcheck:{test:['CMD-SHELL','MYSQL_PWD="$MYSQL_PASSWORD" mysql --protocol=TCP -h 127.0.0.1 -u rehearsal rehearsal -e "SELECT 1"'],interval:'3s',timeout:'5s',retries:60}};
  const spec={services:{
  db:{...db,volumes:['source-db:/var/lib/mysql']},restore:{...db,volumes:['restore-db:/var/lib/mysql']},
  backend:{build:{context:resolve(root,'apps/api')},environment:['INVENTORY_DB_URL','INVENTORY_DB_USER=rehearsal','INVENTORY_DB_PASSWORD',
@@ -56,7 +56,7 @@ try{
  web:{build:{context:resolve(root,'apps/web')},ports:['127.0.0.1::80'],depends_on:['backend']}
  },volumes:{'source-db':{},'restore-db':{}}};
  await writeFile(compose,JSON.stringify(spec,null,2),{flag:'wx',mode:0o600});
- stage='isolated_target';started=true;dc(['up','--build','--detach']);
+ stage='isolated_target';substage='container-start';started=true;dc(['up','--build','--detach']);
  const currentBase=()=> 'http://127.0.0.1:'+dc(['port','web','80']).trim().split(':').pop();
  let base=currentBase();
  let token;
@@ -73,13 +73,14 @@ try{
   return r.json();
  }
  const snapshot=()=>api('/api/imports/snapshot?source='+encodeURIComponent(source)+'&installation='+encodeURIComponent(installation));
- await login();setGate(report,'isolated_target','PASS',['Unique disposable Compose project; new MySQL 8.4 volumes; production Dockerfiles']);
+ substage='initial-backend-login';await login();setGate(report,'isolated_target','PASS',['Unique disposable Compose project; new MySQL 8.4 volumes; production Dockerfiles']);
  stage='import';const preview=await api('/api/imports/preview',prepared.bundle);if(preview.errors.length)throw new Error('Import preflight rejected');
  const applied=await api('/api/imports/apply',prepared.bundle),repeated=await api('/api/imports/apply',prepared.bundle);
  if(applied.newRecords!==prepared.bundle.entries.length||repeated.newRecords!==0)throw new Error('Idempotence failed');
  setGate(report,'import','PASS',['Administrator HTTP import; repeated import creates zero additional records']);
  const before=await snapshot();stage='reconciliation';
  const rec=reconcile(prepared.bundle,before,policy);report.counts=rec.counts;report.totals=rec.totals;report.identities=rec.identities;
+ report.mappingPolicy.materialQuantityScale=rec.materialQuantityScale;
  report.discrepancies=rec.differences;report.integrityChecks=[{status:rec.status,check:'Observed fields, IDs, references, totals and opening adjustments'}];
  setGate(report,'reconciliation',rec.status,['Target export compared to immutable normalized source']);
  if(rec.status!=='PASS')throw new Error('Reconciliation failed');
