@@ -8,10 +8,13 @@ import {preflight,reconcile} from './inventory.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const args=process.argv.slice(2),options={};
 for(let i=0;i<args.length;i+=2)options[args[i]]=args[i+1];
-let report,stage='preflight',started=false,compose,env,project;
+let report,stage='preflight',substage='initialization',started=false,compose,env,project;
 function docker(args,input){
  const r=spawnSync('docker',args,{cwd:root,env,encoding:'utf8',input,maxBuffer:64*1024*1024,timeout:900000});
- if(r.error||r.status!==0)throw new Error('Container command failed at '+stage);
+ if(r.error||r.status!==0){
+  if(report)report.warnings.push('Container failure: '+substage+'; exit '+r.status+'; MySQL codes '+((r.stderr??'').match(/ERROR [0-9]+/g)??[]).join(','));
+  throw new Error('Container command failed at '+stage);
+ }
  return r.stdout;
 }
 const dc=(args,input)=>docker(['compose','--project-name',project,'--file',compose,...args],input);
@@ -95,8 +98,10 @@ try{
  const sql=dc(['exec','-T','db','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -uroot --single-transaction --skip-comments --no-tablespaces rehearsal']);
  await writeFile(resolve(output,'target-backup.sql'),sql,{flag:'wx',mode:0o600});
  report.restore={status:'NOT_RUN',backupSha256:fingerprint(Buffer.from(sql)),scope:'Disposable target DB; includes test user hashes, keep private'};
- dc(['exec','-T','restore','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot rehearsal'],sql);
- env.INVENTORY_DB_URL='jdbc:mysql://restore:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);await login();
+ substage='restore-sql';dc(['exec','-T','restore','sh','-c','MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot rehearsal'],sql);
+ substage='restored-backend-start';env.INVENTORY_DB_URL='jdbc:mysql://restore:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);
+ substage='restored-backend-login';await login();
+ substage='restored-state-comparison';
  if(JSON.stringify(await snapshot())!==JSON.stringify(before))throw new Error('Restored state mismatch');
  report.restore.status='PASS';setGate(report,'backup_restore','PASS',['mysqldump restored into separate empty MySQL; API comparison passed']);
  stage='rollback';env.INVENTORY_DB_URL='jdbc:mysql://db:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);await login();
@@ -106,7 +111,7 @@ try{
  if(fingerprint(await readFile(resolve(options['--snapshot'])))!==report.snapshot.sha256)throw new Error('Source changed during rehearsal');
  }
 }catch{
- if(report){setGate(report,stage,'FAIL',['Execution failed; source contents and credentials omitted']);report.blockers.push('Rehearsal incomplete: '+stage);}
+ if(report){setGate(report,stage,'FAIL',['Execution failed at '+substage+'; source contents and credentials omitted']);report.blockers.push('Rehearsal incomplete: '+stage);}
  else console.error('Cannot start rehearsal: valid inputs/options and a new output directory required.');
 }finally{
  if(started){try{dc(['down','--volumes','--remove-orphans']);}catch{if(report)report.blockers.push('Disposable cleanup failed; inspect generated Compose file');}}
