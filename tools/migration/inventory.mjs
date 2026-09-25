@@ -3,6 +3,7 @@ export function decimal(value,scale) {
  const s=String(value);
  if(!/^\d+(\.\d+)?$/.test(s))throw new Error('Invalid nonnegative decimal');
  const [whole,fraction='']=s.split('.');
+ if(whole.replace(/^0+/,'').length>19-scale)throw new Error('Decimal exceeds target precision');
  if(fraction.length>scale && /[1-9]/.test(fraction.slice(scale)))throw new Error('Precision requires review; no rounding');
  return BigInt(whole)*10n**BigInt(scale)+BigInt(fraction.slice(0,scale).padEnd(scale,'0'));
 }
@@ -24,8 +25,11 @@ export function preflight(source,installation,data,policy) {
   if(!bundle.entries.length||bundle.entries.length>2000)throw new Error('Invalid bundle size');
   for(const e of bundle.entries){
    if(!['brand','city','product','material','recipe'].includes(e.type)||!e.legacyId)throw new Error('Invalid identity');
-   if(e.type==='product'){decimal(e.price,2);decimal(e.stock,0);if(typeof e.available!=='boolean')throw new Error('Missing availability');}
-   if(e.type==='material'||e.type==='recipe')decimal(e.quantity,4);
+   if(e.type==='product'){
+    if(typeof e.price!=='string'||!Number.isSafeInteger(e.stock))throw new Error('Exact price string and safe integer stock required');
+    decimal(e.price,2);decimal(e.stock,0);if(typeof e.available!=='boolean')throw new Error('Missing availability');
+   }
+   if(e.type==='material'||e.type==='recipe'){if(typeof e.quantity!=='string')throw new Error('Exact quantity string required');decimal(e.quantity,4);}
   }
  }catch{issues.push({code:'SOURCE_NORMALIZATION_FAILED',status:'FAIL'});return {bundle:null,issues,warnings};}
  const entries=new Map(),codes=new Set(),pairs=new Set();
@@ -63,6 +67,7 @@ export function reconcile(bundle,target,policy) {
   if(actual.has(key(e)))differences.push({code:'DUPLICATE_TARGET_MAPPING',record:key(e)});
   if(targetIds.has(e.type+':'+e.targetId))differences.push({code:'COLLIDING_TARGET_ID',record:key(e)});
   targetIds.add(e.type+':'+e.targetId);actual.set(key(e),e);targetCounts[e.type]=(targetCounts[e.type]??0)+1;
+  if(e.deletedAt)targetCounts[e.type+'Archived']=(targetCounts[e.type+'Archived']??0)+1;
  }
  const totals={source:{finishedStock:'0',stockValueMinor:'0',materials:{}},target:{finishedStock:'0',stockValueMinor:'0',materials:{}}};
  function total(e,side){
@@ -71,6 +76,7 @@ export function reconcile(bundle,target,policy) {
  }
  for(const e of bundle.entries){
   sourceCounts[e.type]=(sourceCounts[e.type]??0)+1;
+  if(e.deletedAt)sourceCounts[e.type+'Archived']=(sourceCounts[e.type+'Archived']??0)+1;
   const a=actual.get(key(e));
   try{total(e,'source');}catch{differences.push({code:'INVALID_SOURCE_TOTAL',record:key(e)});}
   if(!a||a.missing){differences.push({code:'MISSING_TARGET',record:key(e)});continue;}
