@@ -4,11 +4,29 @@ Source â†’ Backup â†’ Isolated restore â†’ Preflight â†’ Migration â†’ Reconcili
 
 **Passing automated checks does not authorize deletion or archival of the source.**
 
+## Owner scope decision — 2026-09-26
+
+The superseded legacy sources were proof-of-concept/development applications only.
+No production data or production deployment existed. Therefore **real_source is N/A —
+no production data existed**. Zero-byte database placeholders require no migration.
+No further search for a production export is required.
+
+**legacyVersionRollback is N/A — no legacy production data/deployment required
+cross-version rollback**. This is separate from the mandatory rollback gate: the
+consolidated application's same-version database routing, backup creation, isolated
+restore, restart and observed-state comparison must still PASS. Synthetic fixtures test
+migration machinery; they do not represent historical production data.
+
+The scoped decision is recorded by applyProofOfConceptDecision in the report contract,
+only for Inventory/Fleet synthetic rehearsals. It cannot exempt failed tests, restore
+or any other automated gate. Future real imports require their own evidence and review.
+Final owner acceptance and repository archival approval remain outstanding.
+
 ## Report contract
 
 All projects use version 1 of tools/migration/report.mjs with migration-report.json and migration-report.md outputs. Copies live in each independent monorepo without a cross-repository runtime dependency.
 
-PASS requires evidence. FAIL means a proven failure. REQUIRES_REVIEW means an unresolved semantic decision. NOT_RUN means absent execution evidence. Every mandatory gate must pass against a real source before READY_FOR_OWNER_ACCEPTANCE. Synthetic fixtures never satisfy real_source. Owner acceptance and archival authorization are never inferred. Dirty code blocks readiness.
+PASS requires evidence. FAIL means a proven failure. REQUIRES_REVIEW means an unresolved semantic decision. NOT_RUN means absent execution evidence. Every applicable mandatory gate must pass before READY_FOR_OWNER_ACCEPTANCE. Synthetic fixtures never count as a successful real-source migration. N/A requires the explicit scoped owner decision below; it is neither PASS nor missing evidence. Generic inspection cannot grant exemptions. Owner acceptance and archival authorization are never inferred. Dirty code blocks readiness.
 
 The snapshot command only fingerprints/parses JSON and records unexecuted gates. It is not an import or restore test:
 
@@ -38,7 +56,7 @@ npm run migration:test
 npm run migration:rehearse -- --snapshot tools/migration/fixtures/inventory-source.json --policy tools/migration/fixtures/inventory-policy.json --kind synthetic --out migration-runs/rehearsal-001
 ~~~
 
-Exit 2 is expected for synthetic evidence with unresolved real-source/cutover gates. Exit 1 is
+Exit 2 indicates an unapproved run, including READY_FOR_OWNER_ACCEPTANCE; inspect the report and run the verifier. Exit 1 is
 a failed execution. Reports are generated in the chosen output directory; the SQL backup stays
 there too and contains test user hashes. Keep real-data runs private. CI uploads JSON/Markdown only.
 
@@ -52,13 +70,12 @@ and mapping evidence together. Historical movements are not manufactured from op
 The authenticated administrator GET /api/imports/snapshot exports current imported entities with stable
 legacy/target IDs and exact decimal strings. It reads entity tables, not the stored source JSON.
 Unexpected/missing mappings, reference differences, archive changes and stock totals fail reconciliation.
-Full legacy application-version rollback remains a review gate: the automated rehearsal verifies
-same-version disposable database rollback, not unknown production-version compatibility.
+Historical legacy version rollback is N/A under the owner scope decision. The automated rehearsal verifies same-version disposable database routing rollback.
 
-See QUARKUS-LIFECYCLE.md: the unsupported runtime is explicit pre-cutover technical debt.
+See QUARKUS-LIFECYCLE.md for the isolated 3.33 LTS upgrade and its verification status.
 
 Read source copies only. Use a separate disposable target and unique database name/credentials. Never run a new lineage against a legacy database. Hash snapshots before/after. Reconcile exclusions explicitly. Backup creation is not proof: restore into a second empty target and compare counts, exact totals, references and acceptance behavior.
 
 Rollback freezes writes and restores the compatible database and application version before reopening access. Do not run old code against a new schema. Post-cutover writes require explicit reconciliation; rollback may require downtime and must not silently discard them. Personal rollback uses browser backup restore and revision/stale-tab checks.
 
-Adapters must record currency, units, timestamp interpretation and identity decisions. Never guess timezones, round silently or fuzzy-merge. Missing real snapshots remain NOT_RUN. Generated fixtures are labeled synthetic and cannot establish legacy retirement readiness.
+Adapters must record currency, units, timestamp interpretation and identity decisions. Never guess timezones, round silently or fuzzy-merge. Unresolved real-source requirements remain NOT_RUN. The owner-confirmed Inventory/Fleet proof-of-concept sources are explicitly exempt; generated fixtures remain labeled synthetic.

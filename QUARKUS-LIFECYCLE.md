@@ -1,44 +1,48 @@
-# Quarkus lifecycle review — 2026-09-25
+# Quarkus lifecycle review � 2026-09-26
 
-## Decision
+## Upgrade under verification
 
-Keep the existing architecture, but track the runtime upgrade as high-priority technical debt.
-The current community Quarkus pin is **3.8.4** in apps/api/pom.xml. The project's three
-JJWT artifacts are independently pinned to 0.12.5; a Quarkus BOM update will not update them.
+The isolated codex/quarkus-333-readiness branch upgrades BOM and build plugin together
+from unsupported **3.8.4** to **3.33.3.3**, the maintained 3.33 LTS security patch described
+in the official [release notice](https://quarkus.io/blog/quarkus-3-33-3-3-released/).
+The [3.33 announcement](https://quarkus.io/blog/quarkus-3-33-released/) documents the LTS
+maintenance policy. Community 3.8 is end-of-life; see the [EOL table](https://quarkus.io/eol/).
+The prior decision to defer this upgrade is superseded by the owner's 2026-09-26 instruction.
 
-Community 3.8 reached end of life on 2025-02-28 (final patch 3.8.6.1). It no longer has
-promised community security maintenance. This is a support finding, not a claim that every
-published CVE is reachable in this application. See the official [EOL table](https://quarkus.io/eol/)
-and [security policy](https://quarkus.io/security/).
+## Compatibility changes
 
-Candidate: **Quarkus 3.33.3.3**, the current maintained 3.33 LTS patch found in the
-[release notice](https://quarkus.io/blog/quarkus-3-33-3-3-released/). Recheck the current patch
-before executing the upgrade. The [3.33 announcement](https://quarkus.io/blog/quarkus-3-33-released/)
-documents its 12-month support policy.
+- Rename RESTEasy Reactive Jackson to quarkus-rest-jackson (3.9 migration).
+- Replace hibernate-orm.database.generation with schema-management.strategy in all three
+  configurations; keep none and the clean Flyway lineage, with clean-disabled=true.
+- Replace http.cors with http.cors.enabled; keep explicit origins and production auth.
+- Rename the relocated quarkus-junit5 test extension to quarkus-junit; move container
+  validation to the entry type argument without weakening cascade validation.
+- Hibernate ORM/Jakarta, Flyway, Netty and related managed dependencies follow the new BOM.
+  No application redesign, schema migration, authentication exemption or data rewrite.
+- Independent pins (JJWT 0.12.5, bcrypt 0.10.2, AssertJ 3.24.2) remain explicit; this BOM
+  upgrade is not a claim that every independent dependency has received a new version.
 
-## Why this is not a low-risk patch here
+References: [3.9 migration](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.9),
+[3.23 migration](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.23),
+[3.24 migration](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.24).
 
-- The RESTEasy Reactive Jackson extension used by this POM was renamed to quarkus-rest-jackson
-  in [3.9](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.9). Review filter behavior
-  and exact login exemptions after relocation, not just compilation.
-- This app uses quarkus.hibernate-orm.database.generation; [3.23](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.23)
-  changes schema configuration naming. Clean Flyway lineage and disabled schema generation must remain enforced.
-- The target crosses Hibernate ORM 7/Jakarta Persistence 3.2 in [3.24](https://github.com/quarkusio/quarkus/wiki/Migration-Guide-3.24),
-  then later ORM updates. Recheck optimistic versions, archived entities, decimal serialization,
-  native adjustment SQL, query semantics and actual MySQL migration/restore behavior.
+## Verification
 
-A reasonable planning estimate is 2–4 engineering days plus integration review, not a promised
-delivery duration. Updating configuration/dependencies is small; validating persisted-data and
-authentication behavior dominates the risk. No language/framework replacement is warranted.
+Local clean Maven test: 58 passed, zero failures/errors/skips on Java 21.
+The first invocation overlapped the dependency edit and mixed old/new bootstrap classes;
+a clean invocation with the final POM passed. That mixed invocation is not upgrade evidence.
+H2 reports a Flyway tested-version warning; production MySQL validation remains mandatory.
+Mockito emits the existing future-JDK dynamic-agent warning; Java 17/21 remain supported here.
 
-## Upgrade acceptance
+Full branch CI (Java 17, frontend tests/typecheck/build, authentication/permissions,
+migration/reconciliation, MySQL integration and retirement acceptance, browser workflows,
+production Docker builds, restart/backup/restore/same-version routing) is pending.
+Do not merge until all checks pass. Record the successful run in the final retirement report.
 
-Use a separate verification branch. Update BOM/plugin together, migrate renamed artifacts/config,
-resolve independent JWT dependencies, then run every backend/frontend/browser test, production
-image build and the disposable MySQL import/restart/restore rehearsal. Compare schema and exact
-stock values before/after. Retain the known application image and database backup as rollback
-pair; never roll old code over an incompatible database.
+## Rollback boundary
 
-No upgraded runtime was executed in this milestone. Baseline 3.8.4 tests passed; this does not
-certify a 3.33 upgrade. The upgrade is explicitly deferred rather than mixed into migration
-reconciliation, and requires resolution or explicit risk review before production cutover.
+The baseline main commit c797053 remains recoverable in Git. No legacy production data or
+deployment existed, so historical cross-version rollback is N/A (owner decision).
+The consolidated application's same-version restore/routing rehearsal remains mandatory.
+For future production upgrades retain a compatible database backup and application image;
+never run old code over an incompatible schema or silently discard post-snapshot writes.

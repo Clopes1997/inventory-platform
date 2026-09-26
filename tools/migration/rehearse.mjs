@@ -3,7 +3,7 @@ import {resolve,dirname} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomBytes,randomUUID} from 'node:crypto';
 import {execFileSync,spawnSync} from 'node:child_process';
-import {newReport,setGate,writeReports,fingerprint} from './report.mjs';
+import {applyProofOfConceptDecision,newReport,setGate,writeReports,fingerprint} from './report.mjs';
 import {preflight,reconcile} from './inventory.mjs';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'../..');
 const args=process.argv.slice(2),options={};
@@ -34,8 +34,12 @@ try{
  if(fingerprint(await readFile(resolve(output,'source-snapshot.json')))!==report.snapshot.sha256)throw new Error('Source copy integrity mismatch');
  const prepared=preflight(source,installation,data,policy);
  report.discrepancies=prepared.issues;report.warnings=prepared.warnings;
- report.manualReviews.push({id:'runtime-lifecycle',status:'REQUIRES_REVIEW',evidence:'Quarkus 3.8.4 is unsupported; see QUARKUS-LIFECYCLE.md'});
  setGate(report,'source_snapshot','PASS',['Read-only JSON source; SHA-256 recorded']);
+ if(options['--kind']==='synthetic')applyProofOfConceptDecision(report);
+ else {
+  report.legacyVersionRollback={status:'REQUIRES_REVIEW',evidence:['Future real installations are outside the owner proof-of-concept exemption']};
+  report.manualReviews.push({id:'real-installation-version-boundary',status:'REQUIRES_REVIEW',evidence:'Review actual deployment versions and post-snapshot writes before cutover'});
+ }
  if(options['--kind']==='real')setGate(report,'real_source','PASS',['Operator identified snapshot as real; ownership still requires review']);
  if(prepared.issues.length){setGate(report,'preflight',prepared.issues.some(i=>i.status==='FAIL')?'FAIL':'REQUIRES_REVIEW',['Mapping or source correction required']);}
  else{
@@ -111,8 +115,8 @@ try{
  report.restore.status='PASS';setGate(report,'backup_restore','PASS',['mysqldump restored into separate empty MySQL; API comparison passed']);
  stage='rollback';env.INVENTORY_DB_URL='jdbc:mysql://db:3306/rehearsal';dc(['up','--detach','--force-recreate','backend']);dc(['restart','web']);base=currentBase();await login();
  if(JSON.stringify(await snapshot())!==JSON.stringify(before))throw new Error('Rollback state mismatch');
- report.rollback={status:'REQUIRES_REVIEW',routingRestoration:'PASS',applicationVersion:report.target.commit,reason:'Same-version disposable rollback passed; actual legacy version and post-cutover writes require review'};
- setGate(report,'rollback','REQUIRES_REVIEW',['Same-version rollback verified; previous production version unavailable']);
+ report.rollback={status:'PASS',routingRestoration:'PASS',applicationVersion:report.target.commit,reason:'Same-version disposable database routing rollback verified; historical deployment scope recorded separately'};
+ setGate(report,'rollback','PASS',['Same-version database routing restored and persisted state compared']);
  if(fingerprint(await readFile(resolve(options['--snapshot'])))!==report.snapshot.sha256)throw new Error('Source changed during rehearsal');
  }
 }catch{

@@ -11,7 +11,7 @@ public class ImportBundle {
     @Min(1) @Max(1) public int schemaVersion = 1;
     @NotBlank @Pattern(regexp = "arquivel|product-manager|product-list|autoflex") public String source;
     @NotBlank @Size(max = 64) public String installation;
-    @NotNull @Size(min = 1, max = 2000) @Valid public List<@NotNull Entry> entries;
+    @NotNull @Size(min = 1, max = 2000) public List<@NotNull @Valid Entry> entries;
 
     public static class Entry {
         @NotBlank @Pattern(regexp = "brand|city|product|material|recipe") public String type;

@@ -169,3 +169,6 @@ checks are not claimed as locally executed. Source installations, currency, unit
 ambiguous historic timestamps remain owner decisions. Code reuse for archived products
 is rejected rather than silently merging identities. Import is a one-time migration,
 not ongoing synchronization. Retain old applications read-only until all plan gates pass.
+
+
+Retirement scope and owner decisions (2026-09-26) are recorded in [RETIREMENT.md](RETIREMENT.md). Passing automated checks does not authorize deletion or archival of the source.
