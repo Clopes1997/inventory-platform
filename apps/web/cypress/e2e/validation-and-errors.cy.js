@@ -5,6 +5,7 @@
 describe('Validation and errors', () => {
   beforeEach(() => {
     cy.login();
+    cy.get('[data-testid="nav-products"]').click();
   });
 
   it('shows error when creating product with negative price', () => {

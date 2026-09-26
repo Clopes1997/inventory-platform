@@ -117,9 +117,13 @@ try{
  if(JSON.stringify(await snapshot())!==JSON.stringify(before))throw new Error('Rollback state mismatch');
  report.rollback={status:'PASS',routingRestoration:'PASS',applicationVersion:report.target.commit,reason:'Same-version disposable database routing rollback verified; historical deployment scope recorded separately'};
  setGate(report,'rollback','PASS',['Same-version database routing restored and persisted state compared']);
- stage='acceptance';
+ stage='acceptance';substage='full-browser-workflows';
  const workflows=spawnSync(process.execPath,['tools/migration/browser.mjs','--workflows'],{cwd:root,env:{...env,MIGRATION_BASE_URL:base},encoding:'utf8',timeout:360000,maxBuffer:16*1024*1024});
- if(workflows.status!==0)throw new Error('Full browser workflows failed');
+ if(workflows.status!==0){
+  report.warnings.push(...(workflows.stdout??'').split(/\r?\n/).filter(line=>line.startsWith('WORKFLOW_FAILURE:')));
+  if(workflows.error)report.warnings.push('Browser runner error code: '+workflows.error.code);
+  throw new Error('Full browser workflows failed');
+ }
  report.automatedTests.push({name:'Full browser catalog, pagination, production BOM, user administration and validation workflows',status:'PASS'});
 
  if(fingerprint(await readFile(resolve(options['--snapshot'])))!==report.snapshot.sha256)throw new Error('Source changed during rehearsal');

@@ -11,6 +11,7 @@ describe('Production suggestion flow', () => {
     cy.intercept('GET', '**/api/production/suggestion*').as('suggestionApi');
     cy.login();
     cy.wait('@login');
+    cy.get('[data-testid="nav-products"]').click();
   });
 
   it('creates product and raw material, adds material to product, then shows production suggestion', () => {
@@ -21,7 +22,7 @@ describe('Production suggestion flow', () => {
     cy.get('button[type="submit"]').click();
 
     cy.url().should('include', '/edit');
-    cy.contains('E2EPROD');
+    cy.get('#product-code').should('have.value', 'E2EPROD');
 
     cy.get('[data-testid="nav-raw-materials"]').click();
     cy.get('[data-testid="link-new-raw-material"]').click();

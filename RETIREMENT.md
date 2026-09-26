@@ -4,14 +4,14 @@ Source → Backup → Isolated restore → Preflight → Migration → Reconcili
 
 **Passing automated checks does not authorize deletion or archival of the source.**
 
-## Owner scope decision � 2026-09-26
+## Owner scope decision — 2026-09-26
 
 The superseded legacy sources were proof-of-concept/development applications only.
-No production data or production deployment existed. Therefore **real_source is N/A �
+No production data or production deployment existed. Therefore **real_source is N/A —
 no production data existed**. Zero-byte database placeholders require no migration.
 No further search for a production export is required.
 
-**legacyVersionRollback is N/A � no legacy production data/deployment required
+**legacyVersionRollback is N/A — no legacy production data/deployment required
 cross-version rollback**. This is separate from the mandatory rollback gate: the
 consolidated application's same-version database routing, backup creation, isolated
 restore, restart and observed-state comparison must still PASS. Synthetic fixtures test
@@ -79,3 +79,13 @@ Read source copies only. Use a separate disposable target and unique database na
 Rollback freezes writes and restores the compatible database and application version before reopening access. Do not run old code against a new schema. Post-cutover writes require explicit reconciliation; rollback may require downtime and must not silently discard them. Personal rollback uses browser backup restore and revision/stale-tab checks.
 
 Adapters must record currency, units, timestamp interpretation and identity decisions. Never guess timezones, round silently or fuzzy-merge. Unresolved real-source requirements remain NOT_RUN. The owner-confirmed Inventory/Fleet proof-of-concept sources are explicitly exempt; generated fixtures remain labeled synthetic.
+
+
+## Upgrade and expanded browser acceptance
+
+Quarkus is pinned to 3.33.3.3 LTS; see QUARKUS-LIFECYCLE.md for compatibility changes
+and recorded verification. The disposable rehearsal now also runs all ten existing browser
+workflows after same-version routing restoration. It requires ten passes and no skips;
+a browser failure sets acceptance to FAIL even if import and restore passed.
+The final workspace matrix records the exact successful candidate and report path.
+Real-source and historical production rollback remain owner-authorized N/A, never PASS.

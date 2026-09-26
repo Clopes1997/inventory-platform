@@ -5,7 +5,8 @@
  */
 describe('Pagination', () => {
   const PAGE_SIZE = 20;
-  const NEEDED = PAGE_SIZE + 1; // 21 items => 2 pages
+  const NEEDED = PAGE_SIZE + 1;
+  const prefix = Date.now(); // 21 items => 2 pages
 
   before(function () {
     cy.login();
@@ -15,7 +16,7 @@ describe('Pagination', () => {
         cy.request({
           method: 'POST',
           url: `${base}/api/products`,
-          body: { code: `PAG${i}`, name: `Product ${i}`, price: 1 },
+          body: { code: `PAG${prefix}-${i}`, name: `Product ${i}`, price: 1 },
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -23,7 +24,7 @@ describe('Pagination', () => {
         cy.request({
           method: 'POST',
           url: `${base}/api/raw-materials`,
-          body: { code: `RMP${i}`, name: `Raw ${i}`, stockQuantity: 10 },
+          body: { code: `RMP${prefix}-${i}`, name: `Raw ${i}`, stockQuantity: 10 },
           headers: { Authorization: `Bearer ${token}` },
         });
       }
@@ -42,11 +43,12 @@ describe('Pagination', () => {
     cy.contains('h1', 'Products');
 
     cy.get('nav[aria-label="Products pagination"]').should('be.visible');
-    cy.contains('Page 1 of 2');
+    cy.contains(/Showing 1-20 of \d+ products/);
     cy.get('button[aria-label="Next page"]').click();
-    cy.contains('Page 2 of 2');
+    cy.contains(/Showing 21-\d+ of \d+ products/);
+    cy.location('search').should('include', 'page=1');
     cy.get('button[aria-label="Previous page"]').click();
-    cy.contains('Page 1 of 2');
+    cy.contains(/Showing 1-20 of \d+ products/);
   });
 
   it('Raw Materials list shows pagination when more than one page', () => {
@@ -55,6 +57,11 @@ describe('Pagination', () => {
     cy.contains('h1', 'Raw Materials');
 
     cy.get('nav[aria-label="Raw materials pagination"]').should('be.visible');
-    cy.contains(/Page \d+ of \d+/);
+    cy.contains(/Showing 1-20 of \d+ raw materials/);
+    cy.get('button[aria-label="Next page"]').click();
+    cy.contains(/Showing 21-\d+ of \d+ raw materials/);
+    cy.location('search').should('include', 'page=1');
+    cy.get('button[aria-label="Previous page"]').click();
+    cy.contains(/Showing 1-20 of \d+ raw materials/);
   });
 });

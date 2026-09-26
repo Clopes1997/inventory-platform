@@ -1,6 +1,6 @@
-# Quarkus lifecycle review — 2026-09-26
+# Quarkus lifecycle review â€” 2026-09-26
 
-## Upgrade under verification
+## Quarkus 3.33 LTS upgrade
 
 The isolated codex/quarkus-333-readiness branch upgrades BOM and build plugin together
 from unsupported **3.8.4** to **3.33.3.3**, the maintained 3.33 LTS security patch described
@@ -34,10 +34,22 @@ a clean invocation with the final POM passed. That mixed invocation is not upgra
 H2 reports a Flyway tested-version warning; production MySQL validation remains mandatory.
 Mockito emits the existing future-JDK dynamic-agent warning; Java 17/21 remain supported here.
 
-Full branch CI (Java 17, frontend tests/typecheck/build, authentication/permissions,
-migration/reconciliation, MySQL integration and retirement acceptance, browser workflows,
-production Docker builds, restart/backup/restore/same-version routing) is pending.
-Do not merge until all checks pass. Record the successful run in the final retirement report.
+[Candidate CI 36225454300](https://github.com/Clopes1997/inventory-platform/actions/runs/36225454300)
+passed at 9320519: Java 17 backend tests, frontend tests/typecheck/build,
+authentication/permissions, migration/reconciliation, MySQL integration, imported-data browser
+acceptance, production Docker builds, restart, backup/restore and same-version routing.
+
+The broader ten-test browser suite was then added to the disposable production rehearsal.
+Its first run exposed obsolete test assumptions (pagination wording, post-login dashboard,
+input-value assertions and old short test passwords). Tests now follow the actual UI while
+preserving navigation, catalog, stock, BOM, user-role and validation assertions. All ten must
+pass with zero skipped/pending tests. Vite's local API proxy now uses explicit IPv4 to match
+the local backend; production container routing is unchanged. Failures report only static
+test identities/source locations, not credentials or request payloads.
+
+Merge remains conditional on the complete expanded CI suite passing. The workspace
+retirement-readiness.md records the final commit-linked run and disposition. No broad
+application redesign or legacy data migration was needed.
 
 ## Rollback boundary
 
