@@ -4,7 +4,7 @@
  */
 describe('Users (admin)', () => {
   beforeEach(() => {
-    cy.login('inventory', 'inventory-test-password');
+    cy.login();
   });
 
   it('admin can open Users, create a user, and see them in the list', () => {
@@ -15,7 +15,7 @@ describe('Users (admin)', () => {
     cy.get('[data-testid="link-new-user"]').click();
     cy.url().should('include', '/users/new');
     cy.get('#user-username').type('e2eoperator');
-    cy.get('#user-password').type('pass123');
+    cy.get('#user-password').type('isolated-user-password-123');
     cy.get('#user-role').select('OPERATOR');
     cy.get('button[type="submit"]').click();
 
@@ -28,7 +28,7 @@ describe('Users (admin)', () => {
     cy.get('[data-testid="nav-users"]').click();
     cy.get('[data-testid="link-new-user"]').click();
     cy.get('#user-username').type('e2eedit');
-    cy.get('#user-password').type('pass123');
+    cy.get('#user-password').type('isolated-user-password-123');
     cy.get('#user-role').select('OPERATOR');
     cy.get('button[type="submit"]').click();
     cy.url().should('include', '/users');

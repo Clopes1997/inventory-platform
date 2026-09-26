@@ -13,7 +13,7 @@ describe('Validation and errors', () => {
     cy.get('#product-name').type('Negative Price Product');
     cy.get('#product-price').clear().type('-10');
     cy.get('button[type="submit"]').click();
-    cy.contains(/error/i).should('be.visible');
+    cy.get('#product-price').then(($input) => expect($input[0].validity.valid).to.equal(false));
     cy.url().should('include', '/products/new');
   });
 

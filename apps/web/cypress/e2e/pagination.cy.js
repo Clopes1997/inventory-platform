@@ -8,8 +8,6 @@ describe('Pagination', () => {
   const NEEDED = PAGE_SIZE + 1; // 21 items => 2 pages
 
   before(function () {
-    cy.intercept('GET', '**/api/products*').as('productsApi');
-    cy.intercept('GET', '**/api/raw-materials*').as('rawMaterialsApi');
     cy.login();
     cy.get('@apiToken').then((token) => {
       const base = Cypress.config().baseUrl;
@@ -33,6 +31,8 @@ describe('Pagination', () => {
   });
 
   beforeEach(() => {
+    cy.intercept('GET', '**/api/products*').as('productsApi');
+    cy.intercept('GET', '**/api/raw-materials*').as('rawMaterialsApi');
     cy.login();
   });
 

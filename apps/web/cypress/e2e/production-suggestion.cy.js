@@ -37,6 +37,8 @@ describe('Production suggestion flow', () => {
     });
 
     cy.get('[data-testid="nav-products"]').click();
+    cy.get('#filter-name').type('E2E Product');
+    cy.contains('button', 'Apply filters').click();
     cy.get('table').contains('E2EPROD').parent('tr').within(() => cy.get('[data-testid="product-edit-link"]').click());
     cy.contains('Raw materials (recipe)');
     cy.get('@newRawMaterialId').then((id) => {
