@@ -11,7 +11,10 @@
     "test:run": "vitest run",
     "typecheck": "tsc --noEmit",
     "e2e": "cypress open",
-    "e2e:run": "cypress run"
+    "e2e:run": "cypress run",
+    "dev:demo": "vite --mode demo",
+    "build:demo": "tsc --noEmit && vite build --mode demo",
+    "test:demo": "node scripts/test-demo.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.0.0",

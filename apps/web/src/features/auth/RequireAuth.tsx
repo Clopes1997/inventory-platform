@@ -8,7 +8,7 @@ interface RequireAuthProps {
 
 export default function RequireAuth({ children }: RequireAuthProps) {
   const location = useLocation();
-  if (!isAuthenticated()) {
+  if (import.meta.env.MODE !== 'demo' && !isAuthenticated()) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return <>{children}</>;

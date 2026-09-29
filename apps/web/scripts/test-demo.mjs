@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+const source = readFileSync(new URL('../src/api/demo.ts', import.meta.url), 'utf8');
+const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+const { demoAdapter } = await import('data:text/javascript;base64,' + Buffer.from(compiled).toString('base64'));
+const get = async (url, params = {}) => (await demoAdapter({ method: 'get', url, params })).data;
+assert.equal((await get('/users/me')).role, 'VIEWER');
+assert.equal((await get('/products')).totalElements, 2);
+assert.equal((await get('/catalog/products', { name: 'desk', available: 'true' })).totalElements, 1);
+assert.equal((await get('/catalog/products', { minPrice: 500 })).totalElements, 0);
+assert.equal((await get('/catalog/stats', { available: 'false' })).finishedStockValue, 0);
+assert.equal((await get('/products', { page: 1, size: 1 })).content[0].id, 2);
+assert.equal((await get('/products/1/materials'))[0].requiredQuantity, 2);
+assert.equal((await get('/production/suggestion')).totalProductionValue, 12600);
+for (const method of ['post', 'put', 'patch', 'delete']) await assert.rejects(demoAdapter({ method, url: '/products' }), /Read-only/);
+await assert.rejects(get('/unknown'));
+console.log('Demo contracts passed: fixtures, filters, pagination, write rejection and unknown endpoints.');

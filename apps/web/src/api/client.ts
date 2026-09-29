@@ -7,6 +7,7 @@ import { getToken, clearToken } from './auth';
 import { getOnUnauthorized } from './onUnauthorized';
 
 export const api: AxiosInstance = axios.create({
+  ...(import.meta.env.MODE === 'demo' ? { adapter: async (config) => (await import('./demo')).demoAdapter(config) } : {}),
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
 });

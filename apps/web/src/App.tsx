@@ -31,7 +31,7 @@ function AppLayout() {
     <div className="app app-with-sidebar">
       <Sidebar />
       <main className="main main-with-sidebar" role="main">
-        <Routes>
+        {import.meta.env.MODE === 'demo' && <p role="note" style={{padding: '12px', background: '#fef3c7', color: '#713f12'}}>Read-only demo · Fictional sample data. Browse and filter freely; saving changes requires the backend.</p>}<Routes>
           <Route path="/products" element={<ProductList />} />
           <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/" element={<Navigate to="/products" replace />} />
@@ -62,7 +62,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={import.meta.env.MODE === 'demo' ? <Navigate to="/products" replace /> : <Login />} />
       <Route path="*" element={<RequireAuth><ErrorBoundary><AppLayout /></ErrorBoundary></RequireAuth>} />
     </Routes>
   );

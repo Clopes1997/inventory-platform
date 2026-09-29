@@ -80,6 +80,7 @@ export default function Sidebar() {
           <button
             type="button"
             className="btn btn-primary sidebar-logout"
+            disabled={import.meta.env.MODE === 'demo'}
             onClick={handleLogout}
             aria-label="Log out"
           >
