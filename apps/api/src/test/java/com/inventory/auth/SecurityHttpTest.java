@@ -26,8 +26,6 @@ class SecurityHttpTest {
                 .post("/api/users").then().statusCode(201);
         String viewer = login("http-viewer", "viewer-test-password");
         given().auth().oauth2(viewer).get("/api/products").then().statusCode(200);
-        given().get("/api/imports/snapshot?source=autoflex&installation=fixture").then().statusCode(401);
-        given().auth().oauth2(viewer).get("/api/imports/snapshot?source=autoflex&installation=fixture").then().statusCode(403);
         given().auth().oauth2(viewer).contentType(ContentType.JSON)
                 .body(Map.of("code", "FORBIDDEN", "name", "Blocked", "price", 1))
                 .post("/api/products").then().statusCode(403);

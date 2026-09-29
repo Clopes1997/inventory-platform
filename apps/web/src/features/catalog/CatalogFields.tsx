@@ -26,7 +26,7 @@ export default function CatalogFields({ value, onChange }: {
     return () => { active = false; };
   }, []);
   const update = (changes: Partial<ProductDto>) => onChange({ ...value, ...changes });
-  return <fieldset>
+  return <fieldset className="catalog-fields">
     <legend>Catalog and finished stock</legend>
     {error && <p role="alert">{error}</p>}
     <div className="form-group"><label htmlFor="product-description">Description</label>

@@ -23,7 +23,7 @@ function LookupEditor({ kind }: { kind: 'brands' | 'cities' }) {
     } catch (failure) { setError((failure as Error).message); }
     finally { setSaving(false); }
   }
-  return <section><h2>{kind === 'brands' ? 'Brands' : 'Cities'}</h2>
+  return <section><h2 className="section-title">{kind === 'brands' ? 'Brands' : 'Cities'}</h2>
     {error && <p role="alert">{error}</p>}
     <ul>{items.map(item => <li key={item.id}>{item.name}{item.manufacturer ? ` — ${item.manufacturer}` : ''}</li>)}</ul>
     <form onSubmit={save}>
@@ -35,7 +35,7 @@ function LookupEditor({ kind }: { kind: 'brands' | 'cities' }) {
 }
 
 export default function CatalogPage() {
-  return <div className="page-container"><div className="page-card"><h1>Catalog reference data</h1>
+  return <div className="page-container catalog-workspace"><div className="page-card"><h1 className="page-title">Catalog reference data</h1>
     <Link to="/products">Back to products</Link><LookupEditor kind="brands" /><LookupEditor kind="cities" />
   </div></div>;
 }

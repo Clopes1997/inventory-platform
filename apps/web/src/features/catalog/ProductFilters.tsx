@@ -29,19 +29,19 @@ export default function ProductFilters({ values, onApply }: { values: Filters; o
     }
     onApply(filters);
   }
-  return <form onSubmit={apply} aria-label="Filter products" key={JSON.stringify(values)}>
+  return <form className="form-inline product-filters" onSubmit={apply} aria-label="Filter products" key={JSON.stringify(values)}>
     {lookupError && <p role="alert">{lookupError}</p>}
-    <label htmlFor="filter-name">Product name</label><input id="filter-name" name="name" maxLength={255} defaultValue={values.name} />
-    <label htmlFor="filter-min">Minimum price</label><input id="filter-min" name="minPrice" type="number" step="0.01" min="0" defaultValue={values.minPrice} />
-    <label htmlFor="filter-max">Maximum price</label><input id="filter-max" name="maxPrice" type="number" step="0.01" min="0" defaultValue={values.maxPrice} />
-    <label htmlFor="filter-brand">Brand</label><select id="filter-brand" name="brandId" value={brandId} onChange={e=>setBrandId(e.target.value)}>
+    <div className="form-group form-group-inline"><label htmlFor="filter-name">Product name</label><input id="filter-name" name="name" maxLength={255} defaultValue={values.name} /></div>
+    <div className="form-group form-group-inline"><label htmlFor="filter-min">Minimum price</label><input id="filter-min" name="minPrice" type="number" step="0.01" min="0" defaultValue={values.minPrice} /></div>
+    <div className="form-group form-group-inline"><label htmlFor="filter-max">Maximum price</label><input id="filter-max" name="maxPrice" type="number" step="0.01" min="0" defaultValue={values.maxPrice} /></div>
+    <div className="form-group form-group-inline"><label htmlFor="filter-brand">Brand</label><select id="filter-brand" name="brandId" value={brandId} onChange={e=>setBrandId(e.target.value)}>
       {brandId && !brands.some(b=>String(b.id)===brandId) && <option value={brandId}>Selected brand #{brandId}</option>}
-      <option value="">All brands</option>{brands.map(brand => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select>
-    <label htmlFor="filter-city">City</label><select id="filter-city" name="cityId" value={cityId} onChange={e=>setCityId(e.target.value)}>
+      <option value="">All brands</option>{brands.map(brand => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></div>
+    <div className="form-group form-group-inline"><label htmlFor="filter-city">City</label><select id="filter-city" name="cityId" value={cityId} onChange={e=>setCityId(e.target.value)}>
       {cityId && !cities.some(c=>String(c.id)===cityId) && <option value={cityId}>Selected city #{cityId}</option>}
-      <option value="">All cities</option>{cities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select>
-    <label htmlFor="filter-available">Availability</label><select id="filter-available" name="available" defaultValue={values.available ?? ''}>
-      <option value="">All</option><option value="true">Available</option><option value="false">Unavailable</option></select>
-    <button type="submit">Apply filters</button><button type="button" onClick={() => onApply({})}>Clear filters</button>
+      <option value="">All cities</option>{cities.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}</select></div>
+    <div className="form-group form-group-inline"><label htmlFor="filter-available">Availability</label><select id="filter-available" name="available" defaultValue={values.available ?? ''}>
+      <option value="">All</option><option value="true">Available</option><option value="false">Unavailable</option></select></div>
+    <button className="btn btn-primary" type="submit">Apply filters</button><button className="btn btn-secondary" type="button" onClick={() => onApply({})}>Clear filters</button>
   </form>;
 }

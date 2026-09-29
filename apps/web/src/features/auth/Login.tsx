@@ -53,8 +53,8 @@ export default function Login() {
     <div className="login-page">
       <div className="login-card">
         <div className="login-brand">
-          <span className="login-logo">AF</span>
-          <h1 className="login-title">Autoflex</h1>
+          <span className="login-logo">IP</span>
+          <h1 className="login-title">Inventory platform</h1>
           <p className="login-subtitle">Inventory &amp; Production Control</p>
         </div>
         <form onSubmit={handleSubmit}>

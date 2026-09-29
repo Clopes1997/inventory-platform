@@ -100,8 +100,8 @@ export default function ProductList() {
     <div className="page-container">
       <div className="page-card">
         <header className="page-header">
-          <h1 className="page-title">Products</h1>
-          <p className="subtitle">Manage your product catalog</p>
+          <div><h1 className="page-title">Products</h1>
+          <p className="subtitle">Manage your product catalog</p></div>
           <div className="page-header-actions">
             <Link to="/products/new" className="btn btn-primary" data-testid="link-new-product">
               Add Product
@@ -112,7 +112,7 @@ export default function ProductList() {
         <Link to="/catalog">Manage brands and cities</Link>
         {stats && <p aria-live="polite">{stats.productCount} products · {stats.finishedStockUnits} finished units · Stock value: {stats.finishedStockValue}</p>}
         {filtered && <p>Filtered results are paginated; clear filters to use Show all.</p>}
-        <div className="table-wrapper">
+        <div className="table-wrapper product-table" role="region" aria-label="Products table" tabIndex={0}>
           <table>
             <thead>
               <tr>

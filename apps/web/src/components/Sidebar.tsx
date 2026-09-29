@@ -49,8 +49,8 @@ export default function Sidebar() {
         aria-label="Main navigation"
       >
         <div className="sidebar-brand">
-          <span className="sidebar-logo">AF</span>
-          <span className="sidebar-app-name">Autoflex</span>
+          <span className="sidebar-logo">IP</span>
+          <span className="sidebar-app-name">Inventory</span>
         </div>
         <nav className="sidebar-nav">
           <span className="sidebar-menu-label">Menu</span>
@@ -70,7 +70,6 @@ export default function Sidebar() {
             Profile
           </NavLink>
           <NavLink to="/catalog" className={navClassName} onClick={() => setMenuOpen(false)}>Brands and cities</NavLink>
-          {currentUser?.role === 'ADMIN' && <NavLink to="/imports" className={navClassName} onClick={() => setMenuOpen(false)}>Import inventory</NavLink>}
           {currentUser?.role === 'ADMIN' && (
             <NavLink to="/users" className={navClassName} onClick={() => setMenuOpen(false)} data-testid="nav-users">
               Users

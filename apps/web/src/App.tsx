@@ -16,7 +16,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import Sidebar from './components/Sidebar';
 import Dashboard from './features/dashboard/Dashboard';
 import CatalogPage from './features/catalog/CatalogPage';
-import ImportPage from './features/catalog/ImportPage';
 import { fetchMe } from './features/auth/authSlice';
 import { useAppDispatch } from './store';
 import './App.css';
@@ -35,7 +34,6 @@ function AppLayout() {
         <Routes>
           <Route path="/products" element={<ProductList />} />
           <Route path="/catalog" element={<CatalogPage />} />
-          <Route path="/imports" element={<RequireAdmin><ImportPage /></RequireAdmin>} />
           <Route path="/" element={<Navigate to="/products" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/products/new" element={<ProductForm />} />

@@ -915,3 +915,27 @@ tr:hover td {
     padding: 1.5rem 2rem;
   }
 }
+
+/* Consolidated catalog screens use the same dashboard components. */
+.main-with-sidebar { min-width:0; width:calc(100% - 240px); }
+.catalog-workspace section { margin-top:24px; padding:20px; border:1px solid var(--border); border-radius:8px; background:var(--bg); }
+.catalog-workspace form { display:grid; gap:8px; max-width:420px; margin-top:20px; }
+.catalog-workspace input { display:block; max-width:100%; border:1px solid var(--input); border-radius:6px; padding:10px 12px; background:white; color:var(--fg); font:inherit; }
+.catalog-workspace button { padding:10px 16px; background:var(--primary); color:white; border:0; border-radius:6px; cursor:pointer; margin-top:12px; }
+.catalog-workspace button:disabled { opacity:.5; cursor:default; }
+.catalog-workspace li { margin:8px 0; }
+.catalog-workspace [role=alert] { padding:12px; background:#fff1f2; color:#991b1b; border-radius:6px; }
+.catalog-workspace :is(button,input):focus-visible { outline:3px solid #60a5fa; outline-offset:2px; }
+@media(max-width:768px) { .main.main-with-sidebar { width:100%; padding-top:76px; } }
+/* Use shared form groups and controls for catalog filters and editing. */
+.product-filters .form-group { flex:1 1 180px; min-width:0; }
+.product-filters .form-group :is(input,select) { width:100%; max-width:none; }
+.product-filters [role=alert] { flex-basis:100%; }
+.catalog-fields { min-width:0; border:1px solid var(--border); border-radius:var(--radius); padding:var(--space-5); margin-top:var(--space-5); }
+.form-group textarea { width:100%; max-width:560px; min-height:100px; padding:0.75rem; font:inherit; background:var(--bg); border:1px solid var(--input); border-radius:var(--radius); resize:vertical; }
+.form-group input[type=checkbox] { width:auto; height:auto; margin-right:0.5rem; }
+.page-container { min-width:0; }
+.product-table table { min-width:600px; }
+.product-table td { overflow-wrap:anywhere; }
+@media(max-width:640px) { .product-filters .form-group { flex-basis:auto; } }
+.form-group textarea:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }

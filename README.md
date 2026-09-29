@@ -1,17 +1,6 @@
-# Inventory platform — Autoflex foundation
+# Inventory platform
 
-Migration/cutover operators: read [Retirement Readiness](RETIREMENT.md) and the
-[Quarkus lifecycle review](QUARKUS-LIFECYCLE.md). Automated validation never authorizes source archival.
-
-Autoflex manages a product catalog, brands/manufacturers, geographic city metadata,
-finished stock, raw materials and bills of materials. It calculates independent
-per-product production feasibility and supports reviewed imports from Arquivel,
-Product Manager, Product List and old Autoflex snapshots.
-
-This is the inventory foundation in the parent consolidation plan. Legacy applications
-remain in their original folders; subsequent implementation lives in this monorepo.
-No source has been retired and no production data has been migrated. Read [MIGRATION.md](MIGRATION.md)
-before pointing an installation at real source data.
+A product catalog and manufacturing workspace for finished stock, raw materials, bills of materials, production feasibility, brands and cities.
 
 ## Features and architecture
 
@@ -22,15 +11,12 @@ before pointing an installation at real source data.
 - Finished stock with opening/adjustment history and optimistic edit versions.
 - Products with stock cannot be archived; archived codes remain reserved.
 - Decimal raw-material/BOM quantities, and restoration of removed recipe pairs.
-- ADMIN/OPERATOR/VIEWER roles retained from the existing implementation. Imports
-  and user administration require ADMIN; product/material writes allow OPERATOR/ADMIN.
-- Previewable atomic import bundles, source identity maps and record fingerprints.
+- ADMIN/OPERATOR/VIEWER roles. User administration requires ADMIN; product/material writes allow OPERATOR/ADMIN.
 
 Feasibility assumes all raw stock is independently available to each product. It does
 not reserve/consume stock or generate a globally achievable production plan. Summed
 scenario values are not actual inventory or revenue. Dashboard stock values describe
-finished products only. Cities are geographic metadata, not warehouses. Currency and
-material units require source-owner confirmation before live consolidation.
+finished products only. Cities are geographic metadata, not warehouses. Use consistent currency and material units throughout the catalog.
 
 ## Prerequisites
 
@@ -41,7 +27,7 @@ stack. Tests use isolated H2; CI additionally runs the HTTP contracts on MySQL.
 **Use a new empty target database.** Migrations come from `db/consolidated`.
 Historical `db/migration` files remain unchanged and are not the default migration
 path. Never run Flyway repair or rewrite old checksums to force a legacy database
-to accept the new baseline. Existing source data needs a reviewed export/import.
+to accept the new baseline.
 
 ## Local development (PowerShell)
 
@@ -72,6 +58,15 @@ There is no default production account. After first provisioning, set
 `INVENTORY_BOOTSTRAP_ADMIN=false` and remove the bootstrap password from the runtime
 environment. Bootstrap does not overwrite existing users.
 
+On an empty database started through `mvn quarkus:dev`, the development profile creates a disposable administrator account:
+
+```text
+username: test
+password: test
+```
+
+It also creates two sample products, two materials, recipes/BOMs, and finished-product stock so the catalog, inventory, and production-feasibility screens are usable immediately. The account is created only when missing; the sample catalog is created only when both catalog tables are empty, so it is never mixed into an existing development catalog. This seed is disabled outside the `dev` profile. Set `INVENTORY_DEMO_SEED_ENABLED=false` to suppress it locally.
+
 Sessions are held in memory and expire after 30 minutes. Reloading the page requires
 login again. Tokens use stable user IDs; deleted users are rejected and old username
 tokens cannot be reused. Development/test signing keys never serve as production defaults.
@@ -81,7 +76,6 @@ tokens cannot be reused. Development/test signing keys never serve as production
 Run from the inventory-platform root:
 
 ```powershell
-node --test tools/normalize-import.test.mjs
 cd apps/api
 mvn test
 mvn package
@@ -152,23 +146,7 @@ with `docker compose up -d backend`. Place the web listener behind your HTTPS in
 for public deployment. Keep the MySQL volume and rehearse backups/restoration; do not
 use `docker compose down -v` on a populated installation.
 
-GitHub Actions runs Node normalization tests, frontend tests/typecheck/build, backend
+GitHub Actions runs frontend tests/typecheck/build, backend
 tests, MySQL HTTP/migration contracts and container builds. This configures validation,
 not automatic production publishing. GitHub Pages cannot host the backend. Vercel is
 not required for this persistent Java/MySQL architecture.
-
-## Migration and current limits
-
-Follow [MIGRATION.md](MIGRATION.md) for source export formats, converter commands,
-preview/apply, source mappings, reconciliation and rollback. No converter reads or
-modifies source databases automatically. Users are not transferred by the inventory
-bundle importer and must be reconciled separately before retiring old Autoflex.
-
-Local Docker/MySQL verification depends on those tools being installed; configured CI
-checks are not claimed as locally executed. Source installations, currency, units and
-ambiguous historic timestamps remain owner decisions. Code reuse for archived products
-is rejected rather than silently merging identities. Import is a one-time migration,
-not ongoing synchronization. Retain old applications read-only until all plan gates pass.
-
-
-Retirement scope and owner decisions (2026-09-26) are recorded in [RETIREMENT.md](RETIREMENT.md). Passing automated checks does not authorize deletion or archival of the source.

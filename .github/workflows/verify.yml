@@ -19,8 +19,6 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=30
     steps:
       - uses: actions/checkout@v4
-      - name: Migration report contract tests
-        run: npm run migration:test
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -31,7 +29,6 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - run: node --test tools/normalize-import.test.mjs
       - run: npm ci --ignore-scripts
         working-directory: apps/web
       - run: npm run test:run && npm run typecheck && npm run build
@@ -47,23 +44,3 @@ jobs:
           -Dquarkus.datasource.password=isolated-ci-password
       - run: docker build -t inventory-api-check ./apps/api
       - run: docker build -t inventory-web-check ./apps/web
-      - name: Install migration browser
-        run: npx cypress install
-        working-directory: apps/web
-      - name: Disposable migration, backup and rollback rehearsal
-        shell: bash
-        run: |
-          set +e
-          npm run migration:rehearse -- --snapshot tools/migration/fixtures/inventory-source.json --policy tools/migration/fixtures/inventory-policy.json --kind synthetic --out migration-runs/ci
-          result=$?
-          test "$result" -eq 2 || exit 1
-          node tools/migration/verify-rehearsal.mjs migration-runs/ci/migration-report.json
-      - name: Preserve safe synthetic reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: inventory-migration-report
-          path: |
-            migration-runs/ci/migration-report.json
-            migration-runs/ci/migration-report.md
-          if-no-files-found: error

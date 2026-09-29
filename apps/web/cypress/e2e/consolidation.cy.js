@@ -29,16 +29,7 @@ describe('Consolidated inventory workflows', () => {
     });
   });
 
-  it('previews and applies an import and ends the session on reload', () => {
-    const installation = `browser-${Date.now()}`;
-    cy.contains('a', 'Import inventory').click();
-    const bundle = { schemaVersion: 1, source: 'product-list', installation, entries: [
-      { type: 'product', legacyId: '1', name: 'Browser imported product', price: '2.50', stock: 0, available: false },
-    ] };
-    cy.get('#import-file').selectFile({ contents: Cypress.Buffer.from(JSON.stringify(bundle)), fileName: 'bundle.json', mimeType: 'application/json' });
-    cy.contains('1 records: 1 new, 0 already imported.');
-    cy.contains('button', 'Apply reviewed import').click();
-    cy.contains('Imported 1 records');
+  it('ends the session on reload', () => {
     cy.reload();
     cy.url().should('include', '/login');
     cy.window().then(window => expect(window.localStorage.getItem('inventory_token')).to.equal(null));
